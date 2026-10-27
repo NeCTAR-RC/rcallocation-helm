@@ -1,0 +1,182 @@
+# Default values for rcallocation.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+conf:
+  # Set to true for oslo.log debug output.
+  debug: false
+  keystone:
+    auth_url:
+    # Service user. [keystone_authtoken] validates tokens with a project
+    # scoped login; [service_auth] (taynac emails and tenantmanager role
+    # lookups) uses the same user with system scope, so it needs the
+    # service and reader roles on the system.
+    username: rcallocation
+    project_name: service
+    memcached_servers: []
+  api:
+    # Serve the Swagger UI at /v1/docs.
+    enable_swagger_ui: false
+    # Default and maximum number of results per page. Unset options use
+    # the service defaults (1000 and 1000).
+    page_size:
+    max_page_size:
+  allocations:
+    # Field of Research code series offered to new requests
+    # (ANZSRC_2008 or ANZSRC_2020).
+    for_code_series: ANZSRC_2020
+    # Keystone role whose holders on a project own that project's
+    # allocation, and how long a user's project list is cached.
+    tenant_manager_role: tenantmanager
+    role_assignment_cache_seconds:
+  notifications:
+    enabled: true
+    # taynac, logging or noop
+    driver: taynac
+    # Addresses copied on every allocation notification email.
+    cc: []
+    # Base URL of the dashboard, used for links in emails.
+    dashboard_url: https://dashboard.rc.nectar.org.au
+  # Site and zone mappings, rendered to /etc/rcallocation/mappings.yaml
+  # ([allocations] mappings_file). Keys are names, values are lists.
+  #
+  #   home_zones:          allocation home ('national' plus site names)
+  #                        to the compute availability zones it maps to,
+  #                        served by GET /v1/zones/compute_homes/
+  #   home_storage_zones:  site name to the volume and share zones that
+  #                        are local to it, for the approver checks
+  #   site_members:        site name to the email domains of its members
+  #
+  # For example:
+  #   home_zones:
+  #     national: [melbourne, monash]
+  #     uom: [melbourne]
+  #   home_storage_zones:
+  #     uom: [melbourne]
+  #   site_members:
+  #     uom: [unimelb.edu.au]
+  mappings:
+    home_zones: {}
+    home_storage_zones: {}
+    site_members: {}
+  sentry:
+    environment: production
+
+vault:
+  role: k8s
+  settings_secret: 'path/to/secret/in/vault'
+
+api:
+  port: 5000
+  apache:
+    enabled: false
+  image:
+    repository: registry.rc.nectar.org.au/nectar/rcallocation
+  # The image runs gunicorn with two workers on port 5000. Override
+  # here to change the worker count or run a different entry point.
+  # command:
+  #   - gunicorn
+  #   - --bind
+  #   - 0.0.0.0:5000
+  #   - --access-logfile=-
+  #   - --worker-tmp-dir
+  #   - /dev/shm
+  #   - --no-control-socket
+  #   - --workers
+  #   - "4"
+  #   - rcallocation.wsgi:application
+  replicaCount: 1
+  pdb:
+    enabled: false
+    minAvailable: 1
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  gateway:
+    enabled: false
+    annotations: {}
+    hostname: chart-example.local
+    parentRefs:
+      - name: default
+
+job:
+  db_sync:
+    enabled: true
+    command:
+      - rcallocation-manage
+      - db
+      - upgrade
+    args: []
+
+oslo_policy:
+
+
+image:
+  repository: registry.rc.nectar.org.au/nectar/rcallocation
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "1"
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 42420
+  runAsGroup: 42420
+  fsGroup: 42420
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+    add:
+      - NET_BIND_SERVICE
+
+service:
+  type: ClusterIP
+  port: 80
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

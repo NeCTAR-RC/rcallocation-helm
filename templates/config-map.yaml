@@ -1,0 +1,6 @@
+{{- include "nectarlib.configmap" (list . "rcallocation.configmap") -}}
+{{- define "rcallocation.configmap" -}}
+data:
+  mappings.yaml: |-
+    {{- toYaml .Values.conf.mappings | nindent 4 }}
+{{- end -}}

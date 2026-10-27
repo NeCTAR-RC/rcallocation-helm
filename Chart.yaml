@@ -1,0 +1,13 @@
+apiVersion: v2
+name: rcallocation
+description: A Helm chart for rcallocation, the Nectar allocation system API
+type: application
+version: 0.1.0
+appVersion: 0.1.0
+sources:
+- https://github.com/NeCTAR-RC/rcallocation-helm.git
+- https://github.com/NeCTAR-RC/rcallocation.git
+dependencies:
+- name: nectarlib
+  version: 4.4.0
+  repository: oci://registry.rc.nectar.org.au/nectar-helm
